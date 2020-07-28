@@ -34,7 +34,10 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Test\\ApiPlatformLaravel\\": "./tests"
+            "Tests\\ApiPlatformLaravel\\Unit\\": "./tests/unit",
+            "Tests\\ApiPlatformLaravel\\Functional\\": "./tests/functional",
+            "Tests\\Dummy\\": "./tests/package/src",
+            "App\\": "./tests/sandbox/app"
         }
     },
     "scripts": {
@@ -54,10 +57,25 @@
     },
     "require": {
         "php": ">=7.2",
-        "api-platform/core": "^2.5.6"
+        "api-platform/core": "^2.5.6",
+        "illuminate/contracts": "^5.8|^6.0|^7.0",
+        "illuminate/log": "^5.8|^6.0|^7.0",
+        "illuminate/support": "^5.8|^6.0|^7.0",
+        "symfony/cache": "^4.2|^4.3.4|^5.0",
+        "symfony/config": "^4.2|^4.3.4|^5.0",
+        "symfony/dependency-injection": "^4.2|^4.3.4|^5.0",
+        "symfony/expression-language": "^4.2|^4.3.4|^5.0",
+        "symfony/framework-bundle": "^4.2|^4.3.4|^5.0",
+        "symfony/polyfill-php80": "^1.18",
+        "symfony/property-access": "^4.2|^4.3.4|^5.0",
+        "symfony/property-info": "^4.2|^4.3.4|^5.0",
+        "symfony/routing": "^4.2|^4.3.4|^5.0",
+        "symfony/validator": "^4.2|^4.3.4|^5.0"
     },
     "require-dev": {
+        "doctrine/doctrine-bundle": "^1.8|^2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
+        "laravel/framework": "^5.8|^6.0|^7.0",
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12.30",
         "phpstan/phpstan-doctrine": "^0.12.16",
