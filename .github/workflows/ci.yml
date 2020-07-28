@@ -1,0 +1,211 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+    branches:
+      - master
+
+env:
+  COMPOSER_ALLOW_SUPERUSER: '1' # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
+  COMPOSER_INSTALLER_COMMIT: fb22b78362d31c0d2bf516d1f8cdfd2745caa431
+  EXT_PCOV_VERSION: '1.0.6'
+  COVERAGE: '0'
+
+jobs:
+  php-cs-fixer:
+    name: PHP-CS-Fixer (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    container:
+      image: php:${{ matrix.php }}-alpine
+      options: >-
+        --tmpfs /tmp:exec
+        --tmpfs /var/tmp:exec
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    timeout-minutes: 5
+    env:
+      PHP_CS_FIXER_FUTURE_MODE: '1'
+      PHP_CS_FIXER_VERSION: '^2.14'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Install system packages
+        run: |
+          apk add \
+            unzip \
+      - name: Disable PHP memory limit
+        run: echo 'memory_limit=-1' >> /usr/local/etc/php/php.ini
+      - name: Install Composer
+        run: wget -qO - https://raw.githubusercontent.com/composer/getcomposer.org/$COMPOSER_INSTALLER_COMMIT/web/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+      - name: Cache Composer packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.composer/cache
+          key: composer-php${{ matrix.php }}-php-cs-fixer-${{ github.sha }}
+          restore-keys: |
+            composer-php${{ matrix.php }}-php-cs-fixer-
+            composer-php${{ matrix.php }}-
+            composer-
+        continue-on-error: true
+      - name: Update project dependencies
+        run: |
+          composer update --no-progress --no-suggest --ansi
+      - name: Cache PHP-CS-Fixer results
+        uses: actions/cache@v1
+        with:
+          path: /var/cache/php-cs-fixer
+          key: php-cs-fixer-php${{ matrix.php }}-${{ github.sha }}
+          restore-keys: |
+            php-cs-fixer-php${{ matrix.php }}-
+            php-cs-fixer-
+        continue-on-error: true
+      - name: Run PHP-CS-Fixer fix
+        run: |
+          mkdir -p /var/cache/php-cs-fixer
+          ./vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
+
+  phpstan:
+    name: PHPStan (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    container:
+      image: php:${{ matrix.php }}-alpine
+      options: >-
+        --tmpfs /tmp:exec
+        --tmpfs /var/tmp:exec
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    timeout-minutes: 5
+    env:
+      APP_DEBUG: '1' # https://github.com/phpstan/phpstan-symfony/issues/37
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Install system packages
+        run: |
+          apk add \
+            unzip \
+      - name: Disable PHP memory limit
+        run: echo 'memory_limit=-1' >> /usr/local/etc/php/php.ini
+      - name: Install Composer
+        run: wget -qO - https://raw.githubusercontent.com/composer/getcomposer.org/$COMPOSER_INSTALLER_COMMIT/web/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+      - name: Cache Composer packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.composer/cache
+          key: composer-php${{ matrix.php }}-${{ github.sha }}
+          restore-keys: |
+            composer-php${{ matrix.php }}-
+            composer-
+        continue-on-error: true
+      - name: Update project dependencies
+        run: |
+          mkdir -p /tmp/kilip/api-platform-laravel/vendor
+          ln -s /tmp/kilip/api-platform-laravel/vendor vendor
+          composer update --no-progress --no-suggest --ansi
+      - name: Cache PHPStan results
+        uses: actions/cache@v1
+        with:
+          path: /tmp/phpstan
+          key: phpstan-php${{ matrix.php }}-${{ github.sha }}
+          restore-keys: |
+            phpstan-php${{ matrix.php }}-
+            phpstan-
+        continue-on-error: true
+      - name: Run PHPStan analysis
+        run: vendor/bin/phpstan analyse --ansi
+  phpunit:
+    name: PHP-${{ matrix.php }} ${{ matrix.dependency-version }}
+    runs-on: ubuntu-latest
+    container:
+      image: php:${{ matrix.php }}-alpine
+      options: >-
+        --tmpfs /tmp:exec
+        --tmpfs /var/tmp:exec
+    strategy:
+      matrix:
+        php:
+          - '7.2'
+          - '7.3'
+          - '7.4'
+        dependency-version: [prefer-lowest, prefer-stable]
+        include:
+          - php: '7.4'
+            dependency-version: prefer-stable
+            coverage: true
+      fail-fast: false
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Install system packages
+        run: |
+          apk add \
+            bash \
+            unzip \
+      - name: Install pcov PHP extension
+        if: matrix.coverage
+        env:
+          BUILD_DIR: /var/tmp/build/ext-pcov-${{ env.EXT_PCOV_VERSION }}
+          SRC_DIR: /usr/src/php/ext/pcov
+        run: |
+          apk add \
+            $PHPIZE_DEPS
+          mkdir -p "$SRC_DIR" "$BUILD_DIR"
+          cd "$SRC_DIR"
+          curl -fsSL "https://pecl.php.net/get/pcov-$EXT_PCOV_VERSION.tgz" | tar -zx --strip-components 1
+          phpize
+          cd "$BUILD_DIR"
+          "$SRC_DIR"/configure --config-cache
+          make -j"$(nproc)"
+          make -j"$(nproc)" install
+          docker-php-ext-enable pcov
+      - name: Disable PHP memory limit
+        run: echo 'memory_limit=-1' >> /usr/local/etc/php/php.ini
+      - name: Install Composer
+        run: wget -qO - https://raw.githubusercontent.com/composer/getcomposer.org/$COMPOSER_INSTALLER_COMMIT/web/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet
+      - name: Cache Composer packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.composer/cache
+          key: composer-php${{ matrix.php }}-${{ matrix.dependency-version }}-${{ github.sha }}
+        continue-on-error: true
+      - name: Update project dependencies
+        run: |
+          mkdir -p /tmp/kilip/api-platform-laravel/vendor
+          ln -s /tmp/kilip/api-platform-laravel/vendor vendor
+          composer update --no-progress --no-suggest --ansi --prefer-dist --no-interaction --${{ matrix.dependency-version }}
+      - name: Enable code coverage
+        if: matrix.coverage
+        run: echo '::set-env name=COVERAGE::1'
+      - name: Run PHPUnit tests
+        run: |
+          mkdir -p build/logs/phpunit
+          if [ "$COVERAGE" = '1' ]; then
+            vendor/bin/phpunit --coverage-clover build/logs/phpunit/clover.xml --log-junit build/logs/phpunit/junit.xml --colors=always
+          else
+            vendor/bin/phpunit --log-junit build/logs/phpunit/junit.xml --colors=always
+          fi
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: phpunit-logs-php${{ matrix.php }}
+          path: build/logs/phpunit
+        continue-on-error: true
+      - name: Upload coverage results to Codecov
+        if: matrix.coverage
+        uses: codecov/codecov-action@v1
+        with:
+          name: phpunit-php${{ matrix.php }}
+          flags: phpunit
+          fail_ci_if_error: true
+        continue-on-error: true

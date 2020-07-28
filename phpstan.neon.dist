@@ -1,0 +1,14 @@
+parameters:
+	level: 5
+	paths:
+		- src
+	inferPrivatePropertyTypeFromConstructor: true
+	earlyTerminatingMethodCalls:
+		PHPUnit\Framework\Constraint\Constraint:
+			- fail
+	ignoreErrors:
+	    - '#invoked with \d parameters, \d required#'
+	    - '#RouteCollection::getRoutes#'
+	    - '#in PHPDoc tag @var does not exist#'
+	    - '#on an unknown class ApiPlatformCachedContainer#'
+	    - '#class ApiPlatformCachedContainer not found#'

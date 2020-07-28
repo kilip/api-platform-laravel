@@ -1,0 +1,67 @@
+{
+    "name": "kilip/api-platform-laravel",
+    "description": "Provides Laravel integration to API Platform",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anthonius Munthi",
+            "email": "me@itstoni.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        },
+        "laravel": {
+            "providers": [
+                "ApiPlatformLaravel\\ApiPlatformServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "ApiPlatformLaravel\\": "./src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\ApiPlatformLaravel\\": "./tests"
+        }
+    },
+    "scripts": {
+        "phpstan": "./vendor/bin/phpstan analyse --ansi",
+        "phpunit": "./vendor/bin/phpunit --colors=always",
+        "phpcs": "./vendor/bin/php-cs-fixer fix --ansi",
+        "coverage": "@phpunit --coverage-html=build/coverage",
+        "behat": "./vendor/bin/behat --colors",
+        "verify": [
+            "@phpcs --dry-run --diff",
+            "@phpunit",
+            "@phpstan"
+        ]
+    },
+    "suggest": {
+        "symfony/yaml": "To use doctrine yaml config"
+    },
+    "require": {
+        "php": ">=7.2",
+        "api-platform/core": "^2.5.6"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "phpstan/extension-installer": "^1.0",
+        "phpstan/phpstan": "^0.12.30",
+        "phpstan/phpstan-doctrine": "^0.12.16",
+        "phpstan/phpstan-phpunit": "^0.12.11",
+        "phpunit/phpunit": "^8.5.8"
+    }
+}
