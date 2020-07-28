@@ -16,6 +16,7 @@
          verbose="true"
 >
     <php>
+        <env name="DATABASE_URL" value="sqlite:///%kernel.project_dir%/build/app.db"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_FOREIGN_KEYS" value="true"/>

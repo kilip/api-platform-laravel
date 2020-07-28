@@ -61,6 +61,8 @@
         "illuminate/contracts": "^5.8|^6.0|^7.0",
         "illuminate/log": "^5.8|^6.0|^7.0",
         "illuminate/support": "^5.8|^6.0|^7.0",
+        "laravel-doctrine/orm": "^1.6",
+        "orchestra/testbench": "^5.3",
         "symfony/cache": "^4.2|^4.3.4|^5.0",
         "symfony/config": "^4.2|^4.3.4|^5.0",
         "symfony/dependency-injection": "^4.2|^4.3.4|^5.0",
@@ -70,7 +72,8 @@
         "symfony/property-access": "^4.2|^4.3.4|^5.0",
         "symfony/property-info": "^4.2|^4.3.4|^5.0",
         "symfony/routing": "^4.2|^4.3.4|^5.0",
-        "symfony/validator": "^4.2|^4.3.4|^5.0"
+        "symfony/validator": "^4.2|^4.3.4|^5.0",
+        "symfony/yaml": "^4.2|^4.3.4|^5.0"
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^1.8|^2.0",

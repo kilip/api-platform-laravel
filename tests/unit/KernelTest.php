@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\ApiPlatformLaravel\Unit\Bridge;
+namespace Tests\ApiPlatformLaravel\Unit;
 
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use ApiPlatformLaravel\Kernel;
