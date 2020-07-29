@@ -1,7 +1,17 @@
 <?php
 
-return [
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+declare(strict_types=1);
+
+return [
     /*
     |--------------------------------------------------------------------------
     | Default Filesystem Disk
@@ -42,7 +52,6 @@ return [
     */
 
     'disks' => [
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
@@ -64,7 +73,6 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
         ],
-
     ],
 
     /*
@@ -81,5 +89,4 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-
 ];

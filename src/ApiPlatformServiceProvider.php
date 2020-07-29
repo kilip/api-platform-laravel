@@ -80,13 +80,13 @@ class ApiPlatformServiceProvider extends ServiceProvider
 
     private function extendAuthManager(Application $app)
     {
-        if($app->bound('auth')){
+        if ($app->bound('auth')) {
             /* @var \Illuminate\Foundation\Application $app */
             /* @var \Illuminate\Config\Repository $config */
-            $app->make('auth')->provider('doctrine',function($app, $config){
+            $app->make('auth')->provider('doctrine', function ($app, $config) {
                 $model = $config['model'];
                 $em = app('registry')->getManagerForClass($model);
-                if(!$em){
+                if (!$em) {
                     throw new InvalidArgumentException("Can't get entity manager for ${model}");
                 }
 

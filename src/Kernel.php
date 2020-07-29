@@ -165,7 +165,11 @@ class Kernel extends BaseKernel
                     continue;
                 }
                 $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
-                $loader->load($confDir.'/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
+
+                $envDir = $confDir.'/'.$this->environment;
+                if (is_dir($envDir)) {
+                    $loader->load($envDir.'/**/*'.self::CONFIG_EXTS, 'glob');
+                }
             }
         }
     }
