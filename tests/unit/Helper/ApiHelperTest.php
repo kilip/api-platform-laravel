@@ -1,15 +1,27 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
 namespace Tests\ApiPlatformLaravel\Unit\Helper;
 
 use ApiPlatformLaravel\Helper\ApiHelper;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\Mapping\Driver\YamlDriver;
-use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Tests\Parent\Model\UserTrait as AbstractUser;
+use Tests\Dummy\Model\User as ConcreteUser;
 
 class ApiHelperTest extends TestCase
 {
@@ -18,27 +30,30 @@ class ApiHelperTest extends TestCase
 
     private $annotationExpectationCallback;
 
-    protected function setUp():void
+    protected function setUp(): void
     {
         parent::setUp();
-        $this->xmlExpectationCallback = function($args){
+        $this->xmlExpectationCallback = function ($args) {
             $this->assertInstanceOf(Definition::class, $args[0]);
             $this->assertEquals(XmlDriver::class, $args[0]->getClass());
             $this->assertEquals(__NAMESPACE__, $args[1]);
+
             return true;
         };
 
-        $this->yamlExpectationCallback = function($args){
+        $this->yamlExpectationCallback = function ($args) {
             $this->assertInstanceOf(Definition::class, $args[0]);
             $this->assertEquals(YamlDriver::class, $args[0]->getClass());
             $this->assertEquals(__NAMESPACE__, $args[1]);
+
             return true;
         };
 
-        $this->annotationExpectationCallback = function($args){
+        $this->annotationExpectationCallback = function ($args) {
             $this->assertInstanceOf(Definition::class, $args[0]);
             $this->assertEquals(AnnotationDriver::class, $args[0]->getClass());
             $this->assertEquals(__NAMESPACE__, $args[1]);
+
             return true;
         };
     }
@@ -74,8 +89,19 @@ class ApiHelperTest extends TestCase
         $compiler->process($builder);
     }
 
+    public function testResolveTargetEntities()
+    {
+        $helper = new ApiHelper();
+        $helper->resolveTargetEntities(AbstractUser::class, ConcreteUser::class);
+        $resolved = $helper->getResolvedEntities();
+
+        $this->assertArrayHasKey(AbstractUser::class, $resolved);
+        $this->assertEquals(ConcreteUser::class, $resolved[AbstractUser::class]);
+    }
+
     /**
      * @param \Closure $callback
+     *
      * @return \PHPUnit\Framework\MockObject\MockObject|ContainerBuilder
      */
     private function getBuilder($callback)
@@ -85,21 +111,20 @@ class ApiHelperTest extends TestCase
 
         $builder->method('getDefinition')
             ->willReturnMap([
-                ['doctrine.orm.default_metadata_driver', $chainDriver]
+                ['doctrine.orm.default_metadata_driver', $chainDriver],
             ]);
         $builder->method('hasParameter')
             ->willReturnMap([
-                ['doctrine.default_entity_manager', true]
+                ['doctrine.default_entity_manager', true],
             ]);
         $builder->method('getParameter')
             ->willReturnMap([
-                ['doctrine.default_entity_manager','default']
+                ['doctrine.default_entity_manager', 'default'],
             ]);
-
 
         $chainDriver->expects($this->once())
             ->method('addMethodCall')
-            ->with('addDriver',$this->callback($callback));
+            ->with('addDriver', $this->callback($callback));
 
         return $builder;
     }

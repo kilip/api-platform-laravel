@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
 
 namespace ApiPlatformLaravel;
 
@@ -7,14 +17,13 @@ use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
 use ApiPlatformLaravel\Bridge\Bundle;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
-
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
@@ -22,7 +31,7 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
-    const CONFIG_EXTS = '.{php,xml,yaml,yml}';
+    public const CONFIG_EXTS = '.{php,xml,yaml,yml}';
 
     private $laravelKernel;
 
@@ -30,8 +39,7 @@ class Kernel extends BaseKernel
 
     public function __construct(
         KernelContract $kernelContract
-    )
-    {
+    ) {
         $app = $kernelContract->getApplication();
         $environment = $app->get('config')->get('app.env') ?? 'local';
         $debug = $app->get('config')->get('app.debug') ?? true;
@@ -44,20 +52,23 @@ class Kernel extends BaseKernel
     public function prepareContainer(ContainerBuilder $container)
     {
         parent::prepareContainer($container);
-
-        $laravelApp = $this->laravelApp;
-        $compilers = $laravelApp->get('api')->getOrmCompilersPass();
-        foreach($compilers as $compiler){
-            $container->addCompilerPass($compiler);
-        }
+        $this->configureDoctrine($container);
     }
 
-    /**
-     * @return Application
-     */
-    public function getLaravelApplication(): Application
+    private function configureDoctrine(ContainerBuilder $container)
     {
-        return $this->laravelApp;
+        // doctrine related service
+        $laravelApp = $this->laravelApp;
+        $helper = $laravelApp->get('api');
+        $compilers = $helper->getOrmCompilersPass();
+        foreach ($compilers as $compiler) {
+            $container->addCompilerPass($compiler);
+        }
+
+        $resolved = $helper->getResolvedEntities();
+        $container->setParameter('laravel.orm.resolve_target_entities',$resolved);
+        $container->addObjectResource($helper);
+        $container->addObjectResource($laravelApp);
     }
 
     public function getProjectDir()
@@ -97,7 +108,7 @@ class Kernel extends BaseKernel
         }
 
         // find in config path
-        if(file_exists($file = $bundle->getPath().'/../'.$path)){
+        if (file_exists($file = $bundle->getPath().'/../'.$path)) {
             return $file;
         }
         throw new InvalidArgumentException(sprintf('Unable to find file "%s".', $name));
@@ -110,7 +121,7 @@ class Kernel extends BaseKernel
     {
         $filters = [
             'ApiPlatformServiceProvider',
-            'EventServiceProvider'
+            'EventServiceProvider',
         ];
 
         $bundles = [
@@ -121,13 +132,13 @@ class Kernel extends BaseKernel
         ];
         $providers = $this->laravelApp->getLoadedProviders();
         $classes = array_keys($providers);
-        foreach($classes as $class){
-            if(false !== strpos($class,'Illuminate\\')){
+        foreach ($classes as $class) {
+            if (false !== strpos($class, 'Illuminate\\')) {
                 continue;
             }
             $provider = $this->laravelApp->getProvider($class);
             $bundle = new Bundle($provider);
-            if(in_array($bundle->getName(),$filters)){
+            if (\in_array($bundle->getName(), $filters, true)) {
                 continue;
             }
             $bundles[] = $bundle;
@@ -138,18 +149,22 @@ class Kernel extends BaseKernel
 
     /**
      * @param ContainerBuilder|ContainerConfigurator $container
-     * @param LoaderInterface $loader
+     * @param LoaderInterface                        $loader
+     *
      * @throws \Exception
      */
     protected function configureContainer($container, $loader): void
     {
-        if($container instanceof ContainerConfigurator){
+        if ($container instanceof ContainerConfigurator) {
             $this->configureWithConfigurator($container);
-        }else{;
+        } else {
             $container->setParameter('container.dumper.inline_class_loader', true);
 
             $paths = $this->getConfigPaths();
-            foreach($paths as $confDir){
+            foreach ($paths as $confDir) {
+                if(!is_dir($confDir)){
+                    continue;
+                }
                 $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
                 $loader->load($confDir.'/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
             }
@@ -171,13 +186,13 @@ class Kernel extends BaseKernel
     private function configureWithConfigurator($container)
     {
         $paths = $this->getConfigPaths();
-        foreach($paths as $dir){
-            if(!is_dir($dir)){
+        foreach ($paths as $dir) {
+            if (!is_dir($dir)) {
                 continue;
             }
             $container->import($dir.'/*.yaml');
             $envDir = $dir.'/'.$this->environment.'/*.yaml';
-            if(is_dir($envDir)){
+            if (is_dir($envDir)) {
                 $container->import($dir.'/'.$this->environment.'/*.yaml');
             }
         }
@@ -187,8 +202,7 @@ class Kernel extends BaseKernel
     {
         return [
             realpath(__DIR__.'/../config/api_platform'),
-            $this->getProjectDir().'/config/api_platform'
+            $this->getProjectDir().'/config/api_platform',
         ];
     }
 }
-

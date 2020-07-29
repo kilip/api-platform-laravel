@@ -1,17 +1,24 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
 
 namespace ApiPlatformLaravel\Bridge;
-
 
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Console\Application;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
-use Symfony\Component\HttpKernel\Bundle\Bundle as BaseBundle;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
 class Bundle implements BundleInterface
@@ -26,7 +33,7 @@ class Bundle implements BundleInterface
 
     public function __construct(ServiceProvider $provider)
     {
-        $this->class = get_class($provider);
+        $this->class = \get_class($provider);
     }
 
     /**
@@ -56,9 +63,9 @@ class Bundle implements BundleInterface
     /**
      * Returns the bundle's container extension.
      *
-     * @return ExtensionInterface|null The container extension
-     *
      * @throws \LogicException
+     *
+     * @return ExtensionInterface|null The container extension
      */
     public function getContainerExtension()
     {
@@ -131,7 +138,7 @@ class Bundle implements BundleInterface
     {
         $basename = preg_replace('/Provider$/', '', $this->getName());
         $class = $this->getNamespace().'\\DependencyInjection\\'.$basename.'Extension';
-        if(!class_exists($class)){
+        if (!class_exists($class)) {
             $basename = preg_replace('/ServiceProvider$/', '', $this->getName());
             $class = $this->getNamespace().'\\DependencyInjection\\'.$basename.'Extension';
         }
@@ -158,5 +165,4 @@ class Bundle implements BundleInterface
             $this->name = false === $pos ? $class : substr($class, $pos + 1);
         }
     }
-
 }

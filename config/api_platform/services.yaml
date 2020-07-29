@@ -3,3 +3,4 @@ parameters:
 
 framework:
   secret: "%env(resolve:APP_KEY)%"
+  cache: ~

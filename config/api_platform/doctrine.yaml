@@ -11,3 +11,4 @@ doctrine:
     entity_managers:
       default:
         connection: default
+    resolve_target_entities: ~

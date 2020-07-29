@@ -1,12 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
 namespace Tests\ApiPlatformLaravel\Unit;
 
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use ApiPlatformLaravel\Kernel;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
-use Tests\ApiPlatformLaravel\Unit\KernelMockTrait;
 
 class KernelTest extends TestCase
 {
@@ -15,8 +25,8 @@ class KernelTest extends TestCase
     public function testInitializeBundle()
     {
         $kernel = $this->createKernel();
-        $this->assertInstanceOf(BundleInterface::class,$bundle = $kernel->getBundle('DummyServiceProvider'));
-        $this->assertEquals('DummyServiceProvider',$bundle->getName());
+        $this->assertInstanceOf(BundleInterface::class, $bundle = $kernel->getBundle('DummyServiceProvider'));
+        $this->assertEquals('DummyServiceProvider', $bundle->getName());
         $this->assertEquals(realpath(__DIR__.'/../fixtures/dummy/src'), $bundle->getPath());
 
         $this->assertInstanceOf(BundleInterface::class, $bundle = $kernel->getBundle('ApiPlatformBundle'));
@@ -34,7 +44,7 @@ class KernelTest extends TestCase
     {
         $kernel = $this->createKernel();
 
-        if(!is_null($assertExceptionMsgRegex)){
+        if (null !== $assertExceptionMsgRegex) {
             $this->expectException(InvalidArgumentException::class);
             $this->expectExceptionMessageMatches($assertExceptionMsgRegex);
         }
@@ -45,7 +55,7 @@ class KernelTest extends TestCase
     {
         return [
             ['DummyServiceProvider/config/test.php', '#A resource name must start with#'],
-            ['@DummyServiceProvider/../foo','#../foo\" contains invalid characters#'],
+            ['@DummyServiceProvider/../foo', '#../foo\" contains invalid characters#'],
             ['@DummyServiceProvider/config/test.php'],
             ['@DummyServiceProvider/Resources/foo.php'],
         ];

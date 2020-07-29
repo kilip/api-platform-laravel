@@ -64,6 +64,7 @@
         "illuminate/support": "^5.8|^6.0|^7.0",
         "laravel-doctrine/orm": "^1.6",
         "orchestra/testbench": "^5.3",
+        "phpstan/phpstan-symfony": "^0.12.7",
         "symfony/cache": "^4.2|^4.3.4|^5.0",
         "symfony/config": "^4.2|^4.3.4|^5.0",
         "symfony/dependency-injection": "^4.2|^4.3.4|^5.0",

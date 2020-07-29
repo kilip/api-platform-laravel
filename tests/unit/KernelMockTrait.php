@@ -1,19 +1,26 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
 
 namespace Tests\ApiPlatformLaravel\Unit;
-
 
 use ApiPlatformLaravel\Helper\ApiHelper;
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Application;
 use Illuminate\Log\Logger as IlluminateLogger;
-use Illuminate\Log\LogManager;
-use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 use Illuminate\Support\ServiceProvider;
-use Monolog\Logger;
 use Monolog\Logger as MonologLogger;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\Dummy\DummyServiceProvider;
@@ -61,8 +68,8 @@ trait KernelMockTrait
             ->method('get')
             ->willReturnMap([
                 ['app.debug', true],
-                ['app.locale','en'],
-                ['app.env','test']
+                ['app.locale', 'en'],
+                ['app.env', 'test'],
             ]);
 
         $app->method('basePath')
@@ -81,7 +88,7 @@ trait KernelMockTrait
             ->willReturnMap([
                 ['logger', $logger],
                 ['config', $configRepository],
-                ['api', $api]
+                ['api', $api],
             ]);
         $kernel = $this->createMock(KernelContract::class);
         $kernel->method('getApplication')
@@ -91,6 +98,7 @@ trait KernelMockTrait
         $this->app = $app;
         $this->provider = $provider;
         $this->monologLogger = $monologLoger;
+
         return $kernel;
     }
 }
