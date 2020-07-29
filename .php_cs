@@ -14,9 +14,9 @@ HEADER;
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
     ->exclude([
-        __DIR__.'/build',
-        __DIR__.'/vendor',
-        __DIR__.'/tests/fixtures/sandbox/storage'
+        'build',
+        'vendor',
+        'tests/fixtures/sandbox/storage'
     ])
 ;
 

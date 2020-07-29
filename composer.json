@@ -78,14 +78,13 @@
         "doctrine/doctrine-bundle": "^1.8|^2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
         "laravel-doctrine/orm": "^1.4.10|^1.5|^1.6",
-        "laravel-doctrine/acl": "^1.2",
         "laravel/framework": "^5.8|^6.0|^7.0",
         "orchestra/testbench": "^3.8|^4.8|^5.3",
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12.30",
         "phpstan/phpstan-doctrine": "^0.12.16",
-        "phpstan/phpstan-symfony": "^0.12.7",
         "phpstan/phpstan-phpunit": "^0.12.11",
+        "phpstan/phpstan-symfony": "^0.12.7",
         "phpunit/phpunit": "^8.5.8"
     }
 }

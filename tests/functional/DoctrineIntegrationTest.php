@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace Tests\ApiPlatformLaravel\Functional;
 
 use ApiPlatformLaravel\Testing\InteractsWithORM;
-use Illuminate\Support\Facades\Hash;
-use Tests\Dummy\Model\Group;
+use Tests\ApiPlatformLaravel\Functional\Concerns\InteractsWithUser;
 use Tests\Dummy\Model\User;
 
 class DoctrineIntegrationTest extends TestCase
 {
     use InteractsWithORM;
+    use InteractsWithUser;
 
     protected function setUp(): void
     {
@@ -44,42 +44,5 @@ class DoctrineIntegrationTest extends TestCase
 
         $this->assertNotNull($user->getId());
         $this->assertEquals($group->getId(), $user->getGroup()->getId());
-    }
-
-    /**
-     * @param string $username
-     * @param string $email
-     * @param string $fullname
-     * @param string $password
-     *
-     * @return User
-     */
-    protected function createUser($username = 'test', $email = 'test@example.com', $fullname = 'Test User', $password = 'test')
-    {
-        $user = new User();
-        $user
-            ->setUsername($username)
-            ->setEmail($email)
-            ->setFullname($fullname)
-            ->setPassword(Hash::make($password));
-        $this->store($user);
-
-        return $user;
-    }
-
-    /**
-     * @param string $name
-     *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     *
-     * @return Group
-     */
-    protected function createGroup($name = 'test')
-    {
-        $group = new Group();
-        $group->setName('test');
-        $this->store($group);
-
-        return $group;
     }
 }

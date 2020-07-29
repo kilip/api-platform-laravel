@@ -16,6 +16,7 @@ namespace Tests\ApiPlatformLaravel\Functional;
 use ApiPlatformLaravel\ApiPlatformServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Tests\Dummy\DummyServiceProvider;
+use Tests\Dummy\Model\User;
 use Tests\Parent\ParentServiceProvider;
 
 class TestCase extends OrchestraTestCase
@@ -44,5 +45,6 @@ class TestCase extends OrchestraTestCase
         /** @var \Illuminate\Config\Repository $config */
         $config = $app['config'];
         $config->set('database.connections.sqlite.database', $database);
+        $config->set('auth.providers.users.model', User::class);
     }
 }
