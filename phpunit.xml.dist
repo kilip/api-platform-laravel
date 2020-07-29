@@ -18,7 +18,7 @@
     <php>
         <env name="APP_KEY" value="67d829bf61dc5f87a73fd814e2c9f629"/>
         <env name="APP_ENV" value="testing"/>
-        <env name="DATABASE_URL" value="sqlite:///%kernel.project_dir%/build/app.db"/>
+        <env name="DATABASE_URL" value="sqlite:///%kernel.project_dir%/database/db.sqlite"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_FOREIGN_KEYS" value="true"/>
