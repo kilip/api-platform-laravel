@@ -17,7 +17,7 @@ class KernelTest extends TestCase
         $kernel = $this->createKernel();
         $this->assertInstanceOf(BundleInterface::class,$bundle = $kernel->getBundle('DummyServiceProvider'));
         $this->assertEquals('DummyServiceProvider',$bundle->getName());
-        $this->assertEquals(realpath(__DIR__.'/../../package/src'), $bundle->getPath());
+        $this->assertEquals(realpath(__DIR__.'/../package/src'), $bundle->getPath());
 
         $this->assertInstanceOf(BundleInterface::class, $bundle = $kernel->getBundle('ApiPlatformBundle'));
 

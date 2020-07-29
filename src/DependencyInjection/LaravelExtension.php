@@ -14,7 +14,6 @@ class LaravelExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container)
     {
-        $locator = new FileLocator(__DIR__.'/../Resources/services');
-        $loader = new XmlFileLoader($container, $locator);
+        //$container->setParameter('kernel.secret', getenv('APP_KEY'));
     }
 }

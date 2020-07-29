@@ -7,12 +7,7 @@ doctrine:
     #server_version: '5.7'
   orm:
     auto_generate_proxy_classes: true
-    naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-    auto_mapping: true
-    mappings:
-      LaravelBundle:
-        is_bundle: true
-        type: annotation
-        dir: 'Model'
-        prefix: 'ApiPlatformLaravel\Model'
-        alias: laravel
+    default_entity_manager: default
+    entity_managers:
+      default:
+        connection: default

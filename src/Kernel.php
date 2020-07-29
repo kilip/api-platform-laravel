@@ -12,6 +12,7 @@ use Illuminate\Foundation\Application as ApplicationContract;
 
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -19,6 +20,8 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
+
+    const CONFIG_EXTS = '.{php,xml,yaml,yml}';
 
     private $laravelKernel;
 
@@ -104,16 +107,18 @@ class Kernel extends BaseKernel
         return $bundles;
     }
 
-    protected function configureContainer(ContainerConfigurator $container): void
+    protected function configureContainer($container, $loader): void
     {
-        $container->import('../config/{packages}/*.yaml');
-        $container->import('../config/{packages}/'.$this->environment.'/*.yaml');
+        if($container instanceof ContainerConfigurator){
+            $this->configureWithConfigurator($container, $loader);
+        }else{;
+            $container->setParameter('container.dumper.inline_class_loader', true);
+            $confDir = __DIR__.'/../config';
 
-        if (is_file(\dirname(__DIR__).'/config/services.yaml')) {
-            $container->import('../config/{services}.yaml');
-            $container->import('../config/{services}_'.$this->environment.'.yaml');
-        } elseif (is_file($path = \dirname(__DIR__).'/config/services.php')) {
-            (require $path)($container->withPath($path), $this);
+            $loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
+            $loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
+            $loader->load($confDir.'/{services}'.self::CONFIG_EXTS, 'glob');
+            $loader->load($confDir.'/{services}_'.$this->environment.self::CONFIG_EXTS, 'glob');
         }
     }
 
@@ -126,6 +131,19 @@ class Kernel extends BaseKernel
             $routes->import('../config/{routes}.yaml');
         } elseif (is_file($path = \dirname(__DIR__).'/config/routes.php')) {
             (require $path)($routes->withPath($path), $this);
+        }
+    }
+
+    private function configureWithConfigurator($container)
+    {
+        $container->import('../config/{packages}/*.yaml');
+        $container->import('../config/{packages}/'.$this->environment.'/*.yaml');
+
+        if (is_file(\dirname(__DIR__).'/config/services.yaml')) {
+            $container->import('../config/{services}.yaml');
+            $container->import('../config/{services}_'.$this->environment.'.yaml');
+        } elseif (is_file($path = \dirname(__DIR__).'/config/services.php')) {
+            (require $path)($container->withPath($path), $this);
         }
     }
 }
