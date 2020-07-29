@@ -20,8 +20,8 @@ use Doctrine\ORM\Mapping\Driver\YamlDriver;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
-use Tests\Parent\Model\UserTrait as AbstractUser;
 use Tests\Dummy\Model\User as ConcreteUser;
+use Tests\Parent\Model\UserTrait as AbstractUser;
 
 class ApiHelperTest extends TestCase
 {

@@ -15,11 +15,10 @@ namespace Tests\Dummy;
 
 use ApiPlatformLaravel\Facades\Api;
 use Illuminate\Support\ServiceProvider;
-
 use Tests\Dummy\Model\Group;
+use Tests\Dummy\Model\User as ConcreteUser;
 use Tests\Parent\Model\GroupInterface;
 use Tests\Parent\Model\UserInterface as AbstractUser;
-use Tests\Dummy\Model\User as ConcreteUser;
 
 class DummyServiceProvider extends ServiceProvider
 {
@@ -31,6 +30,6 @@ class DummyServiceProvider extends ServiceProvider
     {
         Api::registerAnnotationMapping(__NAMESPACE__.'\\Model', __DIR__.'/Model');
         Api::resolveTargetEntities(AbstractUser::class, ConcreteUser::class);
-        Api::resolveTargetEntities(GroupInterface::class,Group::class);
+        Api::resolveTargetEntities(GroupInterface::class, Group::class);
     }
 }

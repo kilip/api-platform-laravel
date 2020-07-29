@@ -39,7 +39,7 @@ trait InteractsWithORM
 
     public function store(object $entity, $andFlush = true)
     {
-        $class = get_class($entity);
+        $class = \get_class($entity);
         $em = $this->getManagerForClass($class);
 
         $em->persist($entity);

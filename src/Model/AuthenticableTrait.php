@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * This file is part of the Api Platform Laravel project.
+ *
+ * (c) Anthonius Munthi <https://itstoni.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
 
 namespace ApiPlatformLaravel\Model;
 
@@ -16,7 +26,8 @@ trait AuthenticableTrait
     protected $rememberToken;
 
     /**
-     * Get the column name for the primary key
+     * Get the column name for the primary key.
+     *
      * @return string
      */
     public function getAuthIdentifierName()
@@ -26,6 +37,7 @@ trait AuthenticableTrait
 
     /**
      * Get the unique identifier for the user.
+     *
      * @return mixed
      */
     public function getAuthIdentifier()
@@ -53,6 +65,7 @@ trait AuthenticableTrait
 
     /**
      * Get the password for the user.
+     *
      * @return string
      */
     public function getAuthPassword()
@@ -62,6 +75,7 @@ trait AuthenticableTrait
 
     /**
      * Get the token value for the "remember me" session.
+     *
      * @return string
      */
     public function getRememberToken()
@@ -83,6 +97,7 @@ trait AuthenticableTrait
 
     /**
      * Get the column name for the "remember me" token.
+     *
      * @return string
      */
     public function getRememberTokenName()

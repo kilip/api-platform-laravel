@@ -17,7 +17,7 @@ use ApiPlatformLaravel\Model\AuthenticableTrait;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * User trait
+ * User trait.
  */
 trait UserTrait
 {
@@ -46,12 +46,13 @@ trait UserTrait
 
     /**
      * @ORM\ManyToOne(targetEntity="Tests\Parent\Model\GroupInterface")
+     *
      * @var GroupInterface
      */
     protected $group;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function setGroup($group)
     {
@@ -61,7 +62,7 @@ trait UserTrait
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function getGroup()
     {
@@ -78,11 +79,13 @@ trait UserTrait
 
     /**
      * @param string $username
+     *
      * @return static
      */
     public function setUsername(string $username)
     {
         $this->username = $username;
+
         return $this;
     }
 
@@ -96,11 +99,13 @@ trait UserTrait
 
     /**
      * @param string $email
+     *
      * @return static
      */
     public function setEmail(string $email)
     {
         $this->email = $email;
+
         return $this;
     }
 
@@ -114,11 +119,13 @@ trait UserTrait
 
     /**
      * @param string $fullname
+     *
      * @return static
      */
     public function setFullname(string $fullname)
     {
         $this->fullname = $fullname;
+
         return $this;
     }
 }

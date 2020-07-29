@@ -61,7 +61,7 @@ class ApiPlatformServiceProvider extends ServiceProvider
     {
         return [
             'api',
-            'ApiPlatformContainer'
+            'ApiPlatformContainer',
         ];
     }
 

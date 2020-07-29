@@ -23,7 +23,6 @@ use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
@@ -66,7 +65,7 @@ class Kernel extends BaseKernel
         }
 
         $resolved = $helper->getResolvedEntities();
-        $container->setParameter('laravel.orm.resolve_target_entities',$resolved);
+        $container->setParameter('laravel.orm.resolve_target_entities', $resolved);
         $container->addObjectResource($helper);
         $container->addObjectResource($laravelApp);
     }
@@ -162,7 +161,7 @@ class Kernel extends BaseKernel
 
             $paths = $this->getConfigPaths();
             foreach ($paths as $confDir) {
-                if(!is_dir($confDir)){
+                if (!is_dir($confDir)) {
                     continue;
                 }
                 $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
