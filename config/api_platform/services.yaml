@@ -1,4 +1,5 @@
 parameters:
   kernel.secret: "%env(resolve:APP_KEY)%"
+
 framework:
   secret: "%env(resolve:APP_KEY)%"

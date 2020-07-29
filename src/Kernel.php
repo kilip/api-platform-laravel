@@ -7,12 +7,13 @@ use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
 use ApiPlatformLaravel\Bridge\Bundle;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
-use Illuminate\Foundation\Application as ApplicationContract;
 
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
-use Symfony\Component\Config\Resource\FileResource;
+use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -40,12 +41,29 @@ class Kernel extends BaseKernel
         parent::__construct($environment, $debug);
     }
 
+    public function prepareContainer(ContainerBuilder $container)
+    {
+        parent::prepareContainer($container);
+
+        $laravelApp = $this->laravelApp;
+        $compilers = $laravelApp->get('api')->getOrmCompilersPass();
+        foreach($compilers as $compiler){
+            $container->addCompilerPass($compiler);
+        }
+    }
+
+    /**
+     * @return Application
+     */
+    public function getLaravelApplication(): Application
+    {
+        return $this->laravelApp;
+    }
 
     public function getProjectDir()
     {
         return $this->laravelApp->basePath();
     }
-
 
     public function getLogDir()
     {
@@ -90,6 +108,11 @@ class Kernel extends BaseKernel
      */
     public function registerBundles(): iterable
     {
+        $filters = [
+            'ApiPlatformServiceProvider',
+            'EventServiceProvider'
+        ];
+
         $bundles = [
             new FrameworkBundle(),
             new DoctrineBundle(),
@@ -99,26 +122,37 @@ class Kernel extends BaseKernel
         $providers = $this->laravelApp->getLoadedProviders();
         $classes = array_keys($providers);
         foreach($classes as $class){
+            if(false !== strpos($class,'Illuminate\\')){
+                continue;
+            }
             $provider = $this->laravelApp->getProvider($class);
             $bundle = new Bundle($provider);
+            if(in_array($bundle->getName(),$filters)){
+                continue;
+            }
             $bundles[] = $bundle;
         }
 
         return $bundles;
     }
 
+    /**
+     * @param ContainerBuilder|ContainerConfigurator $container
+     * @param LoaderInterface $loader
+     * @throws \Exception
+     */
     protected function configureContainer($container, $loader): void
     {
         if($container instanceof ContainerConfigurator){
-            $this->configureWithConfigurator($container, $loader);
+            $this->configureWithConfigurator($container);
         }else{;
             $container->setParameter('container.dumper.inline_class_loader', true);
-            $confDir = __DIR__.'/../config';
 
-            $loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
-            $loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
-            $loader->load($confDir.'/{services}'.self::CONFIG_EXTS, 'glob');
-            $loader->load($confDir.'/{services}_'.$this->environment.self::CONFIG_EXTS, 'glob');
+            $paths = $this->getConfigPaths();
+            foreach($paths as $confDir){
+                $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
+                $loader->load($confDir.'/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
+            }
         }
     }
 
@@ -136,15 +170,25 @@ class Kernel extends BaseKernel
 
     private function configureWithConfigurator($container)
     {
-        $container->import('../config/{packages}/*.yaml');
-        $container->import('../config/{packages}/'.$this->environment.'/*.yaml');
-
-        if (is_file(\dirname(__DIR__).'/config/services.yaml')) {
-            $container->import('../config/{services}.yaml');
-            $container->import('../config/{services}_'.$this->environment.'.yaml');
-        } elseif (is_file($path = \dirname(__DIR__).'/config/services.php')) {
-            (require $path)($container->withPath($path), $this);
+        $paths = $this->getConfigPaths();
+        foreach($paths as $dir){
+            if(!is_dir($dir)){
+                continue;
+            }
+            $container->import($dir.'/*.yaml');
+            $envDir = $dir.'/'.$this->environment.'/*.yaml';
+            if(is_dir($envDir)){
+                $container->import($dir.'/'.$this->environment.'/*.yaml');
+            }
         }
+    }
+
+    private function getConfigPaths()
+    {
+        return [
+            realpath(__DIR__.'/../config/api_platform'),
+            $this->getProjectDir().'/config/api_platform'
+        ];
     }
 }
 

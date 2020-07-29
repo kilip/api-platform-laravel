@@ -4,6 +4,8 @@
 namespace Tests\ApiPlatformLaravel\Unit;
 
 
+use ApiPlatformLaravel\Helper\ApiHelper;
+use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Application;
@@ -44,6 +46,11 @@ trait KernelMockTrait
         $provider = new DummyServiceProvider($app);
         $monologLoger = $this->createMock(MonologLogger::class);
         $configRepository = $this->createMock(Repository::class);
+        $api = $this->createMock(ApiHelper::class);
+        $ormPass = $this->createMock(DoctrineOrmMappingsPass::class);
+
+        $api->method('getOrmCompilersPass')
+            ->willReturn([$ormPass]);
 
         $logger = $this->createMock(IlluminateLogger::class);
         $logger->method('getLogger')
@@ -73,7 +80,8 @@ trait KernelMockTrait
         $app->method('get')
             ->willReturnMap([
                 ['logger', $logger],
-                ['config', $configRepository]
+                ['config', $configRepository],
+                ['api', $api]
             ]);
         $kernel = $this->createMock(KernelContract::class);
         $kernel->method('getApplication')

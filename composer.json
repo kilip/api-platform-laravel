@@ -36,7 +36,8 @@
         "psr-4": {
             "Tests\\ApiPlatformLaravel\\Unit\\": "./tests/unit",
             "Tests\\ApiPlatformLaravel\\Functional\\": "./tests/functional",
-            "Tests\\Dummy\\": "./tests/package/src",
+            "Tests\\Dummy\\": "./tests/fixtures/dummy/src",
+            "Tests\\Parent\\": "./tests/fixtures/parent/src",
             "App\\": "./tests/sandbox/app"
         }
     },
@@ -78,6 +79,7 @@
     "require-dev": {
         "doctrine/doctrine-bundle": "^1.8|^2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
+        "laravel-doctrine/acl": "^1.2",
         "laravel/framework": "^5.8|^6.0|^7.0",
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^0.12.30",

@@ -14,11 +14,7 @@ class LaravelBundle extends Bundle
     {
         parent::build($container);
 
-        $container->addCompilerPass(new FilterServicePass());
 
-        $container->addCompilerPass(DoctrineOrmMappingsPass::createAnnotationMappingDriver(
-            ['Tests\\Dummy\\Model'],
-            [__DIR__.'/../tests/package/src/Model']
-        ));
+        $container->addCompilerPass(new FilterServicePass());
     }
 }

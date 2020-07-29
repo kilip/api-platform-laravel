@@ -5,8 +5,7 @@ namespace Tests\Dummy\Model;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use LaravelDoctrine\ORM\Auth\Authenticatable as AuthenticatableTrait;
+use Tests\Parent\Model\User as BaseUser;
 
 /**
  * Class User
@@ -15,10 +14,8 @@ use LaravelDoctrine\ORM\Auth\Authenticatable as AuthenticatableTrait;
  * @ApiResource()
  * @package Tests\Dummy\Entity
  */
-class User implements AuthenticatableContract
+class User extends BaseUser
 {
-    use AuthenticatableTrait;
-
     /**
      * @ORM\Column(type="string")
      * @ORM\Id()

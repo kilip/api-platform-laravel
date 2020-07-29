@@ -15,5 +15,8 @@ class LaravelExtension extends Extension
     public function load(array $configs, ContainerBuilder $container)
     {
         //$container->setParameter('kernel.secret', getenv('APP_KEY'));
+
+        $container->setParameter('use_cache','false');
+        $container->setParameter('doctrine.orm.auto_generate_proxy_classes',true);
     }
 }

@@ -10,6 +10,11 @@ use Doctrine\Persistence\ManagerRegistry;
 
 trait InteractsWithORM
 {
+    /**
+     * Refresh database
+     * @throws \Doctrine\ORM\Tools\ToolsException
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
     public function refreshDatabase()
     {
         $registry = $this->getRegistry();
