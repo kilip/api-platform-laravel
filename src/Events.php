@@ -16,4 +16,5 @@ namespace ApiPlatformLaravel;
 class Events
 {
     public const BOOT = 'api_platform.boot';
+    public const KERNEL_BOOT = 'api_platform.kernel.boot';
 }

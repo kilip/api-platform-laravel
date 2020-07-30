@@ -30,7 +30,7 @@ trait InteractsWithUser
     protected function createUser($username = 'test', $email = 'test@example.com', $fullname = 'Test User', $password = 'test')
     {
         $model = config('auth.providers.users.model');
-        $user = $this->getRepository($model)->findBy(['username' => $username]);
+        $user = $this->getRepository($model)->findOneBy(['username' => $username]);
 
         if (!\is_object($user)) {
             $user = new User();

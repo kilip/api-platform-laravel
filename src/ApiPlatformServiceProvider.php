@@ -14,23 +14,34 @@ declare(strict_types=1);
 namespace ApiPlatformLaravel;
 
 use ApiPlatformLaravel\Bridge\UrlGenerator;
+use ApiPlatformLaravel\Event\ApplicationEvent;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use ApiPlatformLaravel\Helper\ApiHelper;
+use ApiPlatformLaravel\Http\ApiPlatformMiddleware;
+use ApiPlatformLaravel\Listeners\KernelEventSubscriber;
 use Doctrine\Persistence\ManagerRegistry;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
 use Illuminate\Foundation\Application;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use LaravelDoctrine\ORM\Auth\DoctrineUserProvider;
+use Symfony\Component\HttpFoundation\Request;
 
 class ApiPlatformServiceProvider extends ServiceProvider
 {
     public function boot(Application $app)
     {
         $this->registerServices($app);
-        $this->extendAuthManager($app);
+        $this->registerEvents($app);
         $this->registerUrlGenerator($app);
+        $this->registerMiddleware($app);
+        $this->extendAuthManager($app);
 
-        $app->booted([$this, 'afterBoot']);
+        $app->booted(function (Application $app) {
+            event(Events::BOOT, [$app->make(ApplicationEvent::class)]);
+        });
     }
 
     public function register()
@@ -41,22 +52,12 @@ class ApiPlatformServiceProvider extends ServiceProvider
         $this->app->alias('api', ApiHelper::class);
     }
 
-    public function afterBoot(Application $app)
-    {
-        $kernel = $app->make(Kernel::class);
-        $kernel->boot();
-    }
-
     public static function publishableProviders()
     {
         return [
             'api',
             'ApiPlatformContainer',
         ];
-    }
-
-    private function registerEvents(Application $app)
-    {
     }
 
     private function registerServices(Application $app)
@@ -67,6 +68,8 @@ class ApiPlatformServiceProvider extends ServiceProvider
             return new Kernel($laravelKernel);
         });
 
+        $app->alias(Kernel::class, 'api_platform.kernel');
+
         $app->singleton('ApiPlatformContainer', function (Application $app) {
             return $app->make(Kernel::class)->getContainer();
         });
@@ -74,6 +77,7 @@ class ApiPlatformServiceProvider extends ServiceProvider
         $app->singleton('registry', function (Application $app) {
             return $app->make('ApiPlatformContainer')->get('doctrine');
         });
+
         $app->alias('registry', ManagerRegistry::class);
     }
 
@@ -109,14 +113,13 @@ class ApiPlatformServiceProvider extends ServiceProvider
             $app->instance('routes', $routes);
 
             // @TODO: should be improved in future for this simple binding
-            $router = clone $app['ApiPlatformContainer']->get('router');
-            $router->setOption('resource_type', 'api_platform');
             $generator = new UrlGenerator(
                 $routes, $app->rebinding(
                     'request', $this->requestRebinder()
                 ),
                 $app['config']['app.asset_url']
             );
+            $router = clone $app['ApiPlatformContainer']->get('router')->getGenerator();
             $generator->setSymfonyGenerator($router);
 
             return $generator;
@@ -133,5 +136,34 @@ class ApiPlatformServiceProvider extends ServiceProvider
         return function ($app, $request) {
             $app['url']->setRequest($request);
         };
+    }
+
+    private function registerMiddleware(Application $app)
+    {
+        $app->singleton(ApiPlatformMiddleware::class, function (Application $app) {
+            /** @var \Symfony\Component\DependencyInjection\Container $container */
+            $container = $app->get('ApiPlatformContainer');
+            $kernel = $container->get('http_kernel');
+            $session = null;
+            if ($container->has('session')) {
+                $session = $container->get('session');
+            }
+
+            return new ApiPlatformMiddleware($kernel, $session);
+        });
+
+        $app->alias(ApiPlatformMiddleware::class, 'api_platform');
+        $app->singleton('ApiPlaceholderAction', function (Application $app) {
+            return $app['ApiPlatformContainer']->get('api_platform.action.placeholder');
+        });
+    }
+
+    private function registerEvents(Application $app)
+    {
+        $events = $app->get('events');
+        $events->subscribe(new KernelEventSubscriber());
+        $app->singleton(ApplicationEvent::class, function ($app) {
+            return new ApplicationEvent($app);
+        });
     }
 }

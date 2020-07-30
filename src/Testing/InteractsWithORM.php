@@ -19,6 +19,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 trait InteractsWithORM
 {
+    public static $databaseRefreshed = false;
+
     /**
      * Refresh database.
      *
@@ -27,6 +29,9 @@ trait InteractsWithORM
      */
     public function refreshDatabase()
     {
+        if (static::$databaseRefreshed) {
+            return;
+        }
         $registry = $this->getRegistry();
 
         foreach ($registry->getManagers() as $em) {
@@ -35,6 +40,7 @@ trait InteractsWithORM
             $tool->dropSchema($metas);
             $tool->createSchema($metas);
         }
+        static::$databaseRefreshed = true;
     }
 
     public function store(object $entity, $andFlush = true)

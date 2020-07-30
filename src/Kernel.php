@@ -26,6 +26,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\Component\Routing\RouteCollectionBuilder;
 
 class Kernel extends CompatKernel
 {
@@ -56,29 +57,6 @@ class Kernel extends CompatKernel
 
     public function prepareContainer(ContainerBuilder $container)
     {
-        $laravelApp = $this->laravelApp;
-        $config = $laravelApp->get('config');
-        $container->setParameter('laravel.orm.database_url', $config->get('api_platform.database_url'));
-
-        $this->configureDoctrine($container);
-        // doctrine related service
-        $laravelApp = $this->laravelApp;
-        $helper = $laravelApp->get('api');
-        $compilers = $helper->getOrmCompilersPass();
-        foreach ($compilers as $compiler) {
-            $container->addCompilerPass($compiler);
-        }
-
-        $resolved = $helper->getResolvedEntities();
-        $container->setParameter('laravel.orm.resolve_target_entities', $resolved);
-
-        $container->addObjectResource($helper);
-        $container->addObjectResource($laravelApp);
-
-        foreach ($laravelApp->getLoadedProviders() as $name => $loaded) {
-            $provider = $laravelApp->getProvider($name);
-            $container->addObjectResource($provider);
-        }
         parent::prepareContainer($container);
     }
 
@@ -142,7 +120,7 @@ class Kernel extends CompatKernel
             new FrameworkBundle(),
             new DoctrineBundle(),
             new ApiPlatformBundle(),
-            new LaravelBundle(),
+            new LaravelBundle($this->laravelApp),
         ];
         $providers = $this->laravelApp->getLoadedProviders();
         $classes = array_keys($providers);
@@ -159,6 +137,20 @@ class Kernel extends CompatKernel
         }
 
         return $bundles;
+    }
+
+    public function loadRoutes(LoaderInterface $loader)
+    {
+        $routes = new RouteCollectionBuilder($loader);
+        $this->configureRoutes($routes);
+
+        return $routes->build();
+    }
+
+    protected function initializeContainer()
+    {
+        parent::initializeContainer();
+        $this->getContainer()->set('laravel', $this);
     }
 
     protected function configureContainer($container, $loader = null)
@@ -208,15 +200,39 @@ class Kernel extends CompatKernel
         }
     }
 
-    protected function configureRoutes(RoutingConfigurator $routes): void
+    protected function configureRoutes($routes): void
+    {
+        if ($routes instanceof RoutingConfigurator) {
+            $this->routesWithConfigurator($routes);
+        } else {
+            $this->routesWithBuilder($routes);
+        }
+    }
+
+    protected function routesWithBuilder(RouteCollectionBuilder $routes)
+    {
+        $paths = $this->getRouteConfigPaths();
+        foreach ($paths as $path) {
+            if (!is_dir($path)) {
+                continue;
+            }
+            $routes->import($path.'/*'.self::CONFIG_EXTS, '/', 'glob');
+            $routes->import($path.'/'.self::CONFIG_EXTS, '/', 'glob');
+
+            $env = $path.'/'.$this->environment;
+            if (is_dir($env)) {
+                $routes->import($env.'/**/*'.self::CONFIG_EXTS, '/', 'glob');
+            }
+        }
+    }
+
+    protected function routesWithConfigurator(RoutingConfigurator $routes): void
     {
         $routes->import('../config/{routes}/'.$this->environment.'/*.yaml');
         $routes->import('../config/{routes}/*.yaml');
 
         if (is_file(\dirname(__DIR__).'/config/routes.yaml')) {
             $routes->import('../config/{routes}.yaml');
-        } elseif (is_file($path = \dirname(__DIR__).'/config/routes.php')) {
-            (require $path)($routes->withPath($path), $this);
         }
     }
 
@@ -228,7 +244,11 @@ class Kernel extends CompatKernel
         ];
     }
 
-    private function configureDoctrine(ContainerBuilder $container)
+    private function getRouteConfigPaths()
     {
+        return [
+            realpath(__DIR__.'/../config/routes'),
+            $this->getProjectDir().'/config/routes',
+        ];
     }
 }

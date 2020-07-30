@@ -31,6 +31,7 @@
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">./src</directory>
             <exclude>
+                <directory>./src/Compat</directory>
                 <directory>./src/Testing</directory>
                 <directory>./src/Resources</directory>
             </exclude>

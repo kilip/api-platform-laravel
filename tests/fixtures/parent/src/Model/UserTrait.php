@@ -24,14 +24,14 @@ trait UserTrait
     use AuthenticableTrait;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", unique=true)
      *
      * @var string
      */
     protected $username;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", unique=true)
      *
      * @var string
      */
@@ -112,7 +112,7 @@ trait UserTrait
     /**
      * @return string
      */
-    public function getFullname(): string
+    public function getFullname(): ?string
     {
         return $this->fullname;
     }
