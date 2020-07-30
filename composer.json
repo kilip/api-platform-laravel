@@ -75,7 +75,7 @@
         "symfony/yaml": "^4.2|^4.3.4|^5.0"
     },
     "require-dev": {
-        "doctrine/doctrine-bundle": "^1.8|^2.0",
+        "doctrine/doctrine-bundle": "^2.0",
         "friendsofphp/php-cs-fixer": "^2.16",
         "laravel-doctrine/orm": "^1.4.10|^1.5|^1.6",
         "laravel/framework": "^5.8|^6.0|^7.0",

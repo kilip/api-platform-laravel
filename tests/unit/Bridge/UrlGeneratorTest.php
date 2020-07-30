@@ -16,7 +16,7 @@ namespace Tests\ApiPlatformLaravel\Unit\Bridge;
 use ApiPlatformLaravel\Bridge\UrlGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Illuminate\Routing\RouteCollectionInterface;
+use Illuminate\Routing\RouteCollection;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface as SymfonyUrlGenerator;
@@ -30,7 +30,7 @@ class UrlGeneratorTest extends TestCase
 
     public function testCurrent()
     {
-        $routes = $this->createMock(RouteCollectionInterface::class);
+        $routes = $this->createMock(RouteCollection::class);
         $request = new Request();
         $symfonyGenerator = $this->createMock(SymfonyUrlGenerator::class);
         $route = $this->createMock(Route::class);

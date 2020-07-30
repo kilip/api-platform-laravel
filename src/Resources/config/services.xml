@@ -5,14 +5,17 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="'laravel.orm.resolve_target_entities" type="collection"/>
+        <parameter key="laravel.orm.resolve_target_entities" type="collection"/>
+        <parameter key="laravel.orm.database_url" type="string"/>
     </parameters>
 
     <services>
         <service id="laravel" public="true" synthetic="true" class="Illuminate\Foundation\Application"/>
 
         <!-- TODO: use doctrine internal service doctrine.orm.listeners.resolve_target_entity -->
-        <service id="laravel.orm.listeners.resolve_target_entity" class="Doctrine\ORM\Tools\ResolveTargetEntityListener"/>
+        <service id="laravel.orm.listeners.resolve_target_entity" class="Doctrine\ORM\Tools\ResolveTargetEntityListener">
+            <tag name="doctrine.event_subscriber"/>
+        </service>
     </services>
 
 </container>

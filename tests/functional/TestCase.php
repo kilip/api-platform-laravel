@@ -44,7 +44,8 @@ class TestCase extends OrchestraTestCase
 
         /** @var \Illuminate\Config\Repository $config */
         $config = $app['config'];
-        $config->set('database.connections.sqlite.database', $database);
+        $config->set('database.connections.sqlite');
         $config->set('auth.providers.users.model', User::class);
+        $config->set('api_platform.database_url', 'sqlite:///'.$database);
     }
 }

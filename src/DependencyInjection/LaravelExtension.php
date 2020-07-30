@@ -25,20 +25,6 @@ class LaravelExtension extends Extension
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
-        $resolved = $container->getParameter('laravel.orm.resolve_target_entities');
-        if (!\is_array($resolved)) {
-            $resolved = [];
-        }
-        $definition = $container->findDefinition('laravel.orm.listeners.resolve_target_entity');
-        foreach ($resolved as $abstract => $concrete) {
-            $definition->addMethodCall('addResolveTargetEntity', [
-                $abstract,
-                $concrete,
-                [],
-            ]);
-        }
-        $definition->addTag('doctrine.event_subscriber');
-
         $dirs = $container->getParameter('api_platform.resource_class_directories');
         $dirs = array_merge($dirs, [
             __DIR__.'/../../tests/fixtures/dummy/src/Model',

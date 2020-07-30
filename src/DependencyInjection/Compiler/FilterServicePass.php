@@ -21,5 +21,20 @@ class FilterServicePass implements CompilerPassInterface
     public function process(ContainerBuilder $container)
     {
         $container->removeDefinition('api_platform.swagger.action.ui');
+
+        $resolved = $container->getParameter('laravel.orm.resolve_target_entities');
+        if (!\is_array($resolved)) {
+            $resolved = [];
+        }
+
+        $definition = $container->findDefinition('laravel.orm.listeners.resolve_target_entity');
+        foreach ($resolved as $abstract => $concrete) {
+            $definition->addMethodCall('addResolveTargetEntity', [
+                $abstract,
+                $concrete,
+                [],
+            ]);
+        }
+        $definition->addTag('doctrine.event_subscriber');
     }
 }

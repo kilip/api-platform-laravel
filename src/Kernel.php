@@ -24,10 +24,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\AbstractConfigurator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\DependencyInjection\Loader\PhpFileLoader as ContainerPhpFileLoader;
-use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 class Kernel extends CompatKernel
@@ -59,84 +56,30 @@ class Kernel extends CompatKernel
 
     public function prepareContainer(ContainerBuilder $container)
     {
-        parent::prepareContainer($container);
+        $laravelApp = $this->laravelApp;
+        $config = $laravelApp->get('config');
+        $container->setParameter('laravel.orm.database_url', $config->get('api_platform.database_url'));
+
         $this->configureDoctrine($container);
-    }
+        // doctrine related service
+        $laravelApp = $this->laravelApp;
+        $helper = $laravelApp->get('api');
+        $compilers = $helper->getOrmCompilersPass();
+        foreach ($compilers as $compiler) {
+            $container->addCompilerPass($compiler);
+        }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function registerContainerConfiguration(LoaderInterface $loader)
-    {
-        $loader->load(function (ContainerBuilder $container) use ($loader) {
-            $container->loadFromExtension('framework', [
-                'router' => [
-                    'resource' => 'kernel::loadRoutes',
-                    'type' => 'service',
-                ],
-            ]);
+        $resolved = $helper->getResolvedEntities();
+        $container->setParameter('laravel.orm.resolve_target_entities', $resolved);
 
-            $kernelClass = false !== strpos(static::class, "@anonymous\0") ? parent::class : static::class;
+        $container->addObjectResource($helper);
+        $container->addObjectResource($laravelApp);
 
-            if (!$container->hasDefinition('kernel')) {
-                $container->register('kernel', $kernelClass)
-                    ->addTag('controller.service_arguments')
-                    ->setAutoconfigured(true)
-                    ->setSynthetic(true)
-                    ->setPublic(true);
-            }
-
-            $kernelDefinition = $container->getDefinition('kernel');
-            $kernelDefinition->addTag('routing.route_loader');
-
-            $container->addObjectResource($this);
-            $container->fileExists($this->getProjectDir().'/config/bundles.php');
-
-            try {
-                $configureContainer = new \ReflectionMethod($this, 'configureContainer');
-            } catch (\ReflectionException $e) {
-                throw new \LogicException(sprintf('"%s" uses "%s", but does not implement the required method "protected function configureContainer(ContainerConfigurator $c): void".', get_debug_type($this), MicroKernelTrait::class), 0, $e);
-            }
-
-            $configuratorClass = $configureContainer->getNumberOfParameters() > 0 && ($type = $configureContainer->getParameters()[0]->getType()) && !$type->isBuiltin() ? $type->getName() : null;
-
-            if ($configuratorClass && !is_a(ContainerConfigurator::class, $configuratorClass, true)) {
-                $this->configureContainer($container, $loader);
-
-                return;
-            }
-
-            // the user has opted into using the ContainerConfigurator
-            /** @var ContainerPhpFileLoader $kernelLoader */
-            $kernelLoader = $loader->getResolver()->resolve($file = $configureContainer->getFileName());
-            $kernelLoader->setCurrentDir(\dirname($file));
-            $instanceof = &\Closure::bind(function &() { return $this->instanceof; }, $kernelLoader, $kernelLoader)();
-
-            $valuePreProcessor = AbstractConfigurator::$valuePreProcessor;
-            AbstractConfigurator::$valuePreProcessor = function ($value) {
-                return $this === $value ? new Reference('kernel') : $value;
-            };
-
-            try {
-                $this->configureContainer(new ContainerConfigurator($container, $kernelLoader, $instanceof, $file, $file), $loader);
-            } finally {
-                $instanceof = [];
-                $kernelLoader->registerAliasesForSinglyImplementedInterfaces();
-                AbstractConfigurator::$valuePreProcessor = $valuePreProcessor;
-            }
-
-            $container->setAlias($kernelClass, 'kernel')->setPublic(true);
-        });
-    }
-
-    public function setApiRouteLoader(ApiLoader $loader)
-    {
-        $this->apiLoader = $loader;
-    }
-
-    public function getApiRouteLoader()
-    {
-        return $this->apiLoader;
+        foreach ($laravelApp->getLoadedProviders() as $name => $loaded) {
+            $provider = $laravelApp->getProvider($name);
+            $container->addObjectResource($provider);
+        }
+        parent::prepareContainer($container);
     }
 
     /**
@@ -218,13 +161,21 @@ class Kernel extends CompatKernel
         return $bundles;
     }
 
+    protected function configureContainer($container, $loader = null)
+    {
+        if ($container instanceof ContainerConfigurator) {
+            $this->configureWithConfigurator($container);
+        } else {
+            $this->configureWithBuilder($container, $loader);
+        }
+    }
+
     /**
      * @param ContainerConfigurator $container
-     * @param LoaderInterface       $loader
      *
      * @throws \Exception
      */
-    protected function configureContainer(ContainerConfigurator $container, $loader): void
+    protected function configureWithConfigurator(ContainerConfigurator $container): void
     {
         $paths = $this->getConfigPaths();
         foreach ($paths as $dir) {
@@ -235,6 +186,24 @@ class Kernel extends CompatKernel
             $envDir = $dir.'/'.$this->environment.'/*.yaml';
             if (is_dir($envDir)) {
                 $container->import($dir.'/'.$this->environment.'/*.yaml');
+            }
+        }
+    }
+
+    protected function configureWithBuilder($container, LoaderInterface $loader)
+    {
+        $container->setParameter('container.dumper.inline_class_loader', true);
+
+        $paths = $this->getConfigPaths();
+        foreach ($paths as $confDir) {
+            if (!is_dir($confDir)) {
+                continue;
+            }
+            $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
+
+            $envDir = $confDir.'/'.$this->environment;
+            if (is_dir($envDir)) {
+                $loader->load($envDir.'/**/*'.self::CONFIG_EXTS, 'glob');
             }
         }
     }
@@ -261,17 +230,5 @@ class Kernel extends CompatKernel
 
     private function configureDoctrine(ContainerBuilder $container)
     {
-        // doctrine related service
-        $laravelApp = $this->laravelApp;
-        $helper = $laravelApp->get('api');
-        $compilers = $helper->getOrmCompilersPass();
-        foreach ($compilers as $compiler) {
-            $container->addCompilerPass($compiler);
-        }
-
-        $resolved = $helper->getResolvedEntities();
-        $container->setParameter('laravel.orm.resolve_target_entities', $resolved);
-        $container->addObjectResource($helper);
-        $container->addObjectResource($laravelApp);
     }
 }

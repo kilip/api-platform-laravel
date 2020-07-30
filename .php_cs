@@ -16,7 +16,7 @@ $finder = PhpCsFixer\Finder::create()
     ->exclude([
         'build',
         'vendor',
-        'tests/fixtures/sandbox/storage'
+        'tests/sandbox/storage/api-platform'
     ])
 ;
 

@@ -18,7 +18,7 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 if (version_compare(BaseKernel::VERSION, '5', '<')) {
     abstract class CompatKernel extends BaseKernel
     {
-        public function locateResource($name)
+        public function locateResource($name, $dir = null, $first = true)
         {
             return $this->doLocateResource($name);
         }

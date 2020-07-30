@@ -26,10 +26,6 @@ class ApiPlatformServiceProvider extends ServiceProvider
 {
     public function boot(Application $app)
     {
-        if (!$app->eventsAreCached()) {
-            $this->registerEvents($app);
-        }
-
         $this->registerServices($app);
         $this->extendAuthManager($app);
         $this->registerUrlGenerator($app);

@@ -8,6 +8,5 @@ parameters:
 			- fail
 	excludes_analyse:
 	    - src/Compat/CompatKernel.php
+	    - src/Compat/AbstractConfigurator.php
 	ignoreErrors:
-	    - '#ReflectionType::getName#'
-	    - '#Symfony\\Component\\DependencyInjection\\ContainerBuilder given#'

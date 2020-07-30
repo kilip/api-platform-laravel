@@ -13,4 +13,5 @@ declare(strict_types=1);
 
 return [
     'kernel' => 'ApiPlatformLaravel\Kernel',
+    'database_url' => null,
 ];

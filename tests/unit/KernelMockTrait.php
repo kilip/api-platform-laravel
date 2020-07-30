@@ -75,7 +75,7 @@ trait KernelMockTrait
         $app->method('basePath')
             ->willReturn(__DIR__.'/../sandbox');
         $app->method('storagePath')
-            ->willReturn(__DIR__.'/../../build/storage');
+            ->willReturn(__DIR__.'/../sandbox/storage/api-platform/mock');
         $app->method('environment')
             ->willReturn('testing');
         $app->method('getLoadedProviders')
