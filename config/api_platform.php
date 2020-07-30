@@ -14,4 +14,10 @@ declare(strict_types=1);
 return [
     'kernel' => 'ApiPlatformLaravel\Kernel',
     'database_url' => null,
+    'guards' => [
+        'driver' => 'token',
+        'provider' => 'users',
+        'hash' => false,
+        'model' => \LaravelDoctrine\ORM\Auth\Authenticatable::class,
+    ],
 ];

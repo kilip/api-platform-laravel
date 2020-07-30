@@ -20,7 +20,10 @@ class PlaceholderAction extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['api_platform']);
+        $this->middleware('auth:api_platform')->except(function ($request) {
+            return false;
+        });
+        $this->middleware('api_platform');
     }
 
     public function __invoke(Request $request)

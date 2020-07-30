@@ -19,15 +19,11 @@ use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use ApiPlatformLaravel\Helper\ApiHelper;
 use ApiPlatformLaravel\Http\ApiPlatformMiddleware;
 use ApiPlatformLaravel\Listeners\KernelEventSubscriber;
+use ApiPlatformLaravel\Security\DoctrineUserProvider;
 use Doctrine\Persistence\ManagerRegistry;
+use Illuminate\Contracts\Foundation\Application as Application;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
-use Illuminate\Foundation\Application;
-use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use LaravelDoctrine\ORM\Auth\DoctrineUserProvider;
-use Symfony\Component\HttpFoundation\Request;
 
 class ApiPlatformServiceProvider extends ServiceProvider
 {
@@ -46,18 +42,21 @@ class ApiPlatformServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/api_platform.php',
+            'api_platform'
+        );
+
+        config([
+            'auth.guards.providers.users.driver' => 'doctrine',
+            'auth.guards.providers.users.model' => config('api_platform.guards.model'),
+            'auth.guards.api_platform.driver' => config('api_platform.guards.driver'),
+            'auth.guards.api_platform.provider' => config('api_platform.guards.provider'),
+        ]);
         $this->app->singleton('api', function () {
             return new ApiHelper();
         });
         $this->app->alias('api', ApiHelper::class);
-    }
-
-    public static function publishableProviders()
-    {
-        return [
-            'api',
-            'ApiPlatformContainer',
-        ];
     }
 
     private function registerServices(Application $app)
@@ -84,9 +83,8 @@ class ApiPlatformServiceProvider extends ServiceProvider
     private function extendAuthManager(Application $app)
     {
         if ($app->bound('auth')) {
-            /* @var \Illuminate\Foundation\Application $app */
-            /* @var \Illuminate\Config\Repository $config */
             $app->make('auth')->provider('doctrine', function ($app, $config) {
+                $identifiers = $app['config']->get('api_platform.security.identifiers');
                 $model = $config['model'];
                 $em = app('registry')->getManagerForClass($model);
                 if (!$em) {
@@ -96,7 +94,8 @@ class ApiPlatformServiceProvider extends ServiceProvider
                 return new DoctrineUserProvider(
                     $app['hash'],
                     $em,
-                    $model
+                    $model,
+                    $identifiers
                 );
             });
         }
@@ -131,7 +130,7 @@ class ApiPlatformServiceProvider extends ServiceProvider
      *
      * @return \Closure
      */
-    protected function requestRebinder()
+    private function requestRebinder()
     {
         return function ($app, $request) {
             $app['url']->setRequest($request);
@@ -145,11 +144,21 @@ class ApiPlatformServiceProvider extends ServiceProvider
             $container = $app->get('ApiPlatformContainer');
             $kernel = $container->get('http_kernel');
             $session = null;
+            $auth = $app->get('auth');
+            $guard = 'api_platform';
+
+            $config = config();
+
             if ($container->has('session')) {
                 $session = $container->get('session');
             }
 
-            return new ApiPlatformMiddleware($kernel, $session);
+            return new ApiPlatformMiddleware(
+                $kernel,
+                $auth,
+                $guard,
+                $session
+            );
         });
 
         $app->alias(ApiPlatformMiddleware::class, 'api_platform');

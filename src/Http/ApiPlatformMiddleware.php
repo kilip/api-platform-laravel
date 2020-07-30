@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatformLaravel\Http;
 
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
@@ -27,13 +28,25 @@ class ApiPlatformMiddleware
      * @var SessionInterface
      */
     private $session;
+    /**
+     * @var AuthFactory
+     */
+    private $auth;
+    /**
+     * @var string
+     */
+    private $guard;
 
     public function __construct(
         HttpKernelInterface $kernel,
+        AuthFactory $auth,
+        string $guard,
         SessionInterface $session = null
     ) {
         $this->kernel = $kernel;
         $this->session = $session;
+        $this->auth = $auth;
+        $this->guard = $guard;
     }
 
     public function handle($request, \Closure $next)
