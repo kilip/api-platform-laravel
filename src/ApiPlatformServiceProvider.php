@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatformLaravel;
 
+use ApiPlatformLaravel\Bridge\UrlGenerator;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use ApiPlatformLaravel\Helper\ApiHelper;
 use Doctrine\Persistence\ManagerRegistry;
@@ -31,6 +32,7 @@ class ApiPlatformServiceProvider extends ServiceProvider
 
         $this->registerServices($app);
         $this->extendAuthManager($app);
+        $this->registerUrlGenerator($app);
 
         $app->booted([$this, 'afterBoot']);
     }
@@ -45,7 +47,8 @@ class ApiPlatformServiceProvider extends ServiceProvider
 
     public function afterBoot(Application $app)
     {
-        $app->make(Kernel::class)->boot();
+        $kernel = $app->make(Kernel::class);
+        $kernel->boot();
     }
 
     public static function publishableProviders()
@@ -97,5 +100,42 @@ class ApiPlatformServiceProvider extends ServiceProvider
                 );
             });
         }
+    }
+
+    private function registerUrlGenerator(Application $app)
+    {
+        $app->singleton('url', function ($app) {
+            $routes = $app['router']->getRoutes();
+
+            // The URL generator needs the route collection that exists on the router.
+            // Keep in mind this is an object, so we're passing by references here
+            // and all the registered routes will be available to the generator.
+            $app->instance('routes', $routes);
+
+            // @TODO: should be improved in future for this simple binding
+            $router = clone $app['ApiPlatformContainer']->get('router');
+            $router->setOption('resource_type', 'api_platform');
+            $generator = new UrlGenerator(
+                $routes, $app->rebinding(
+                    'request', $this->requestRebinder()
+                ),
+                $app['config']['app.asset_url']
+            );
+            $generator->setSymfonyGenerator($router);
+
+            return $generator;
+        });
+    }
+
+    /**
+     * Get the URL generator request rebinder.
+     *
+     * @return \Closure
+     */
+    protected function requestRebinder()
+    {
+        return function ($app, $request) {
+            $app['url']->setRequest($request);
+        };
     }
 }

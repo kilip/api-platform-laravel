@@ -6,4 +6,8 @@ parameters:
 	earlyTerminatingMethodCalls:
 		PHPUnit\Framework\Constraint\Constraint:
 			- fail
+	excludes_analyse:
+	    - src/Compat/CompatKernel.php
 	ignoreErrors:
+	    - '#ReflectionType::getName#'
+	    - '#Symfony\\Component\\DependencyInjection\\ContainerBuilder given#'

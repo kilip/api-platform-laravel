@@ -1,3 +1,5 @@
 api_platform:
+  mapping:
+    paths: ~
   patch_formats:
     json: ['application/merge-patch+json']

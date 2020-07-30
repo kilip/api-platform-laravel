@@ -38,5 +38,12 @@ class LaravelExtension extends Extension
             ]);
         }
         $definition->addTag('doctrine.event_subscriber');
+
+        $dirs = $container->getParameter('api_platform.resource_class_directories');
+        $dirs = array_merge($dirs, [
+            __DIR__.'/../../tests/fixtures/dummy/src/Model',
+            __DIR__.'/../../tests/fixtures/parent/src/Model',
+        ]);
+        $container->setParameter('api_platform.resource_class_directories', $dirs);
     }
 }

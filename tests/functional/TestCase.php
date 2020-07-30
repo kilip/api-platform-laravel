@@ -32,7 +32,7 @@ class TestCase extends OrchestraTestCase
 
     protected function getBasePath()
     {
-        return realpath(__DIR__.'/../fixtures/sandbox');
+        return realpath(__DIR__.'/../sandbox');
     }
 
     protected function getEnvironmentSetUp($app)

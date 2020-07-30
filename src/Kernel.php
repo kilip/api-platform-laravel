@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace ApiPlatformLaravel;
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
+use ApiPlatform\Core\Bridge\Symfony\Routing\ApiLoader;
 use ApiPlatformLaravel\Bridge\Bundle;
+use ApiPlatformLaravel\Compat\CompatKernel;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
@@ -26,30 +28,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\AbstractConfigurat
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader as ContainerPhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-
-if (version_compare(BaseKernel::VERSION, '5', '<')) {
-    abstract class CompatKernel extends BaseKernel
-    {
-        public function locateResource($name)
-        {
-            return $this->doLocateResource($name);
-        }
-
-        abstract protected function doLocateResource($name);
-    }
-} else {
-    abstract class CompatKernel extends BaseKernel
-    {
-        public function locateResource(string $name)
-        {
-            return $this->doLocateResource($name);
-        }
-
-        abstract protected function doLocateResource($name);
-    }
-}
 
 class Kernel extends CompatKernel
 {
@@ -60,6 +39,11 @@ class Kernel extends CompatKernel
     private $laravelKernel;
 
     private $laravelApp;
+
+    /**
+     * @var ApiLoader
+     */
+    protected $apiLoader;
 
     public function __construct(
         KernelContract $kernelContract
@@ -145,6 +129,16 @@ class Kernel extends CompatKernel
         });
     }
 
+    public function setApiRouteLoader(ApiLoader $loader)
+    {
+        $this->apiLoader = $loader;
+    }
+
+    public function getApiRouteLoader()
+    {
+        return $this->apiLoader;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -225,39 +219,22 @@ class Kernel extends CompatKernel
     }
 
     /**
-     * @param ContainerBuilder|ContainerConfigurator $container
-     * @param LoaderInterface                        $loader
+     * @param ContainerConfigurator $container
+     * @param LoaderInterface       $loader
      *
      * @throws \Exception
      */
     protected function configureContainer(ContainerConfigurator $container, $loader): void
     {
-        if ($container instanceof ContainerConfigurator) {
-            $paths = $this->getConfigPaths();
-            foreach ($paths as $dir) {
-                if (!is_dir($dir)) {
-                    continue;
-                }
-                $container->import($dir.'/*.yaml');
-                $envDir = $dir.'/'.$this->environment.'/*.yaml';
-                if (is_dir($envDir)) {
-                    $container->import($dir.'/'.$this->environment.'/*.yaml');
-                }
+        $paths = $this->getConfigPaths();
+        foreach ($paths as $dir) {
+            if (!is_dir($dir)) {
+                continue;
             }
-        } else {
-            $container->setParameter('container.dumper.inline_class_loader', true);
-
-            $paths = $this->getConfigPaths();
-            foreach ($paths as $confDir) {
-                if (!is_dir($confDir)) {
-                    continue;
-                }
-                $loader->load($confDir.'/*'.self::CONFIG_EXTS, 'glob');
-
-                $envDir = $confDir.'/'.$this->environment;
-                if (is_dir($envDir)) {
-                    $loader->load($envDir.'/**/*'.self::CONFIG_EXTS, 'glob');
-                }
+            $container->import($dir.'/*.yaml');
+            $envDir = $dir.'/'.$this->environment.'/*.yaml';
+            if (is_dir($envDir)) {
+                $container->import($dir.'/'.$this->environment.'/*.yaml');
             }
         }
     }
@@ -277,8 +254,8 @@ class Kernel extends CompatKernel
     private function getConfigPaths()
     {
         return [
-            realpath(__DIR__.'/../config/api_platform'),
-            $this->getProjectDir().'/config/api_platform',
+            realpath(__DIR__.'/../config/packages'),
+            $this->getProjectDir().'/config/packages',
         ];
     }
 
