@@ -56,6 +56,9 @@
     "suggest": {
         "symfony/yaml": "To use doctrine yaml config"
     },
+    "conflict": {
+        "doctrine/orm": "<2.6.3"
+    },
     "require": {
         "php": ">=7.2",
         "api-platform/core": "^2.5.6",
