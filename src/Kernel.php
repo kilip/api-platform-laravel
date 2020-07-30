@@ -19,7 +19,9 @@ use ApiPlatformLaravel\Bridge\Bundle;
 use ApiPlatformLaravel\Compat\CompatKernel;
 use ApiPlatformLaravel\Exception\InvalidArgumentException;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Http\Kernel as KernelContract;
+use Illuminate\Support\Facades\Config;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -34,9 +36,10 @@ class Kernel extends CompatKernel
 
     public const CONFIG_EXTS = '.{php,xml,yaml,yml}';
 
+    /**
+     * @var KernelContract
+     */
     private $laravelKernel;
-
-    private $laravelApp;
 
     /**
      * @var ApiLoader
@@ -46,12 +49,10 @@ class Kernel extends CompatKernel
     public function __construct(
         KernelContract $kernelContract
     ) {
-        $app = $kernelContract->getApplication();
-        $environment = $app->get('config')->get('app.env') ?? 'local';
-        $debug = $app->get('config')->get('app.debug') ?? true;
-
-        $this->laravelApp = $app;
         $this->laravelKernel = $kernelContract;
+        $config = $this->getLaravelConfig();
+        $environment = $config->get('app.env') ?? 'local';
+        $debug = $config->get('app.debug') ?? true;
         parent::__construct($environment, $debug);
     }
 
@@ -65,17 +66,17 @@ class Kernel extends CompatKernel
      */
     public function getProjectDir()
     {
-        return $this->laravelApp->basePath();
+        return $this->laravelKernel->getApplication()->basePath();
     }
 
     public function getLogDir()
     {
-        return $this->laravelApp->storagePath().'/api-platform/logs';
+        return $this->laravelKernel->getApplication()->storagePath().'/api-platform/logs';
     }
 
     public function getCacheDir()
     {
-        return $this->laravelApp->storagePath().'/api-platform/cache';
+        return $this->laravelKernel->getApplication()->storagePath().'/api-platform/cache';
     }
 
     protected function doLocateResource($name)
@@ -111,24 +112,26 @@ class Kernel extends CompatKernel
      */
     public function registerBundles(): iterable
     {
+        $app = $this->laravelKernel->getApplication();
+        $config = $this->getLaravelConfig();
+        $classes = $config->get('app.providers');
         $filters = [
             'ApiPlatformServiceProvider',
             'EventServiceProvider',
         ];
-
         $bundles = [
             new FrameworkBundle(),
             new DoctrineBundle(),
             new ApiPlatformBundle(),
-            new LaravelBundle($this->laravelApp),
+            new LaravelBundle($app),
         ];
-        $providers = $this->laravelApp->getLoadedProviders();
-        $classes = array_keys($providers);
+
         foreach ($classes as $class) {
             if (false !== strpos($class, 'Illuminate\\')) {
                 continue;
             }
-            $provider = $this->laravelApp->getProvider($class);
+            /** @var \Illuminate\Support\ServiceProvider $provider */
+            $provider = $app->resolveProvider($class);
             $bundle = new Bundle($provider);
             if (\in_array($bundle->getName(), $filters, true)) {
                 continue;
@@ -250,5 +253,13 @@ class Kernel extends CompatKernel
             realpath(__DIR__.'/../config/routes'),
             $this->getProjectDir().'/config/routes',
         ];
+    }
+
+    /**
+     * @return ConfigRepository|Config
+     */
+    public function getLaravelConfig()
+    {
+        return $this->laravelKernel->getApplication()->get('config');
     }
 }

@@ -70,6 +70,7 @@ trait KernelMockTrait
                 ['app.debug', true],
                 ['app.locale', 'en'],
                 ['app.env', 'test'],
+                ['app.providers', null, [DummyServiceProvider::class]],
             ]);
 
         $app->method('basePath')
@@ -78,9 +79,7 @@ trait KernelMockTrait
             ->willReturn(__DIR__.'/../sandbox/storage/api-platform/mock');
         $app->method('environment')
             ->willReturn('testing');
-        $app->method('getLoadedProviders')
-            ->willReturn([DummyServiceProvider::class => true]);
-        $app->method('getProvider')
+        $app->method('resolveProvider')
             ->with(DummyServiceProvider::class)
             ->willReturn($provider);
 

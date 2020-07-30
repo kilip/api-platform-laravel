@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatformLaravel\Helper;
 
 use Doctrine\Bundle\DoctrineBundle\DependencyInjection\Compiler\DoctrineOrmMappingsPass;
+use Illuminate\Support\ServiceProvider;
 
 class ApiHelper
 {
@@ -26,6 +27,11 @@ class ApiHelper
      * @var array
      */
     private $resolvedEntities;
+
+    /**
+     * @var ServiceProvider[]
+     */
+    private $providers;
 
     /**
      * @param string $abstractClass

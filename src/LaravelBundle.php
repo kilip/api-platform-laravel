@@ -14,17 +14,20 @@ declare(strict_types=1);
 namespace ApiPlatformLaravel;
 
 use ApiPlatformLaravel\DependencyInjection\Compiler\FilterServicePass;
-use Illuminate\Foundation\Application;
+use Illuminate\Contracts\Container\Container as LaravelContainer;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class LaravelBundle extends Bundle
 {
-    private $application;
+    /**
+     * @var LaravelContainer
+     */
+    private $laravel;
 
-    public function __construct(Application $application)
+    public function __construct(LaravelContainer $laravel)
     {
-        $this->application = $application;
+        $this->laravel = $laravel;
     }
 
     public function boot()
@@ -42,11 +45,11 @@ class LaravelBundle extends Bundle
 
     private function initLaravel(ContainerBuilder $container)
     {
-        $laravelApp = $this->application;
-        $config = $laravelApp->get('config');
+        $laravel = $this->laravel;
+        $config = $laravel->get('config');
         $container->setParameter('laravel.orm.database_url', $config->get('api_platform.database_url'));
 
-        $helper = $laravelApp->get('api');
+        $helper = $laravel->get('api');
         $compilers = $helper->getOrmCompilersPass();
         foreach ($compilers as $compiler) {
             $container->addCompilerPass($compiler);
@@ -54,10 +57,5 @@ class LaravelBundle extends Bundle
 
         $resolved = $helper->getResolvedEntities();
         $container->setParameter('laravel.orm.resolve_target_entities', $resolved);
-
-        foreach ($laravelApp->getLoadedProviders() as $name => $loaded) {
-            $provider = $laravelApp->getProvider($name);
-            $container->addObjectResource($provider);
-        }
     }
 }
