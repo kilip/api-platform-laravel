@@ -62,6 +62,7 @@
     "require": {
         "php": ">=7.2",
         "api-platform/core": "^2.5.6",
+        "doctrine/annotations": "^1.7",
         "illuminate/contracts": "^5.8|^6.0|^7.0",
         "illuminate/log": "^5.8|^6.0|^7.0",
         "illuminate/support": "^5.8|^6.0|^7.0",
